@@ -1,0 +1,2141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>MESSEGE — соцсеть с чатами</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0c12;
+            color: #eef2ff;
+        }
+
+        .app {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #0f1117;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .screen {
+            padding: 20px 16px 80px 16px;
+            display: none;
+        }
+
+        .active-screen {
+            display: block;
+        }
+
+        input, textarea, button {
+            width: 100%;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            border-radius: 16px;
+            border: none;
+            background: #1e1f2a;
+            color: white;
+            font-size: 16px;
+        }
+
+        button {
+            background: #2e6eff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        .post-card, .comment-item, .chat-message {
+            background: #171a22;
+            border-radius: 24px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            gap: 8px;
+        }
+
+        .username {
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .username:hover {
+            opacity: 0.8;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            background: #2c2f3a;
+            padding: 2px 8px;
+            border-radius: 40px;
+        }
+
+        .green-check { color: #2ecc71; font-weight: bold; }
+        .gold-check { color: #f1c40f; }
+        .diamond { color: #00d4ff; }
+        .neon-name { color: #0ff; text-shadow: 0 0 3px cyan; }
+        .sub-line { text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: #2e6eff; }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+        
+        .actions button {
+            width: auto;
+            flex: 1;
+            min-width: 70px;
+            padding: 8px;
+            font-size: 14px;
+        }
+        
+        .topbar {
+            background: #0b0e14;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .post-image {
+            max-width: 100%;
+            border-radius: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            border-radius: 16px;
+            margin-top: 10px;
+        }
+        
+        .remove-image {
+            background: #e74c3c;
+            padding: 8px;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .photo-upload {
+            background: #2c3e66;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .photo-upload input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal img {
+            max-width: 90%;
+            max-height: 90%;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.5);
+            width: 44px;
+            height: 44px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 28px;
+        }
+        
+        .chat-list-item {
+            background: #171a22;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-list-item:hover {
+            background: #1e2130;
+        }
+        
+        .chat-header {
+            position: sticky;
+            top: 0;
+            background: #0b0e14;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .chat-messages {
+            max-height: 55vh;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+        
+        .chat-message {
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .message-own {
+            background: #2e6eff;
+            margin-left: 40px;
+        }
+        
+        .message-other {
+            background: #1e1f2a;
+            margin-right: 40px;
+        }
+        
+        .profile-stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 16px;
+            background: #171a22;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .profile-stat {
+            text-align: center;
+        }
+        
+        .profile-stat-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .profile-stat-label {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            max-width: 600px;
+            width: 100%;
+            background: #0b0e14;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            border-top: 1px solid #1e1f2a;
+        }
+        
+        .bottom-nav button {
+            background: transparent;
+            width: auto;
+            margin: 0;
+            padding: 8px;
+            font-size: 12px;
+        }
+        
+        .unread-badge {
+            background: red;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 10px;
+            margin-left: 5px;
+        }
+        
+        .follow-btn-header {
+            background: #2c3e66;
+            padding: 6px 12px;
+            font-size: 12px;
+            width: auto;
+            margin: 0;
+            border-radius: 20px;
+        }
+        
+        .follow-btn-header.following {
+            background: #27ae60;
+        }
+        
+        .chat-small-btn {
+            background: #8e44ad;
+            padding: 6px 12px;
+            font-size: 12px;
+            width: auto;
+            margin: 0;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="app" id="appRoot">
+    <div id="screenLogin" class="screen active-screen">
+        <h2>MESSEGE</h2>
+        <input type="text" id="loginUsername" placeholder="Юзернейм">
+        <input type="password" id="loginPassword" placeholder="Пароль">
+        <button id="doLoginBtn">Войти</button>
+        <button id="toRegBtn" style="background:#3a3f55;">Регистрация</button>
+    </div>
+    
+    <div id="screenRegister" class="screen">
+        <h2>Регистрация</h2>
+        <input type="text" id="regFullname" placeholder="Никнейм">
+        <input type="text" id="regUsername" placeholder="Юзернейм">
+        <input type="password" id="regPassword" placeholder="Пароль">
+        <button id="completeRegBtn">Зарегистрироваться</button>
+        <button id="backToLoginBtn" style="background:#3a3f55;">Назад</button>
+    </div>
+    
+    <div id="screenMain" class="screen">
+        <div class="topbar">
+            <span><strong>MESSEGE</strong></span>
+            <span id="userNickDisplay"></span>
+            <button id="logoutBtn" style="width: auto; padding: 6px 12px;">Выйти</button>
+        </div>
+        <div style="padding: 12px;">
+            <div><strong>Баланс:</strong> <span id="mcoinBalance">0</span> 🪙</div>
+            <div><strong>Подписчики:</strong> <span id="followersCount">0</span> | <strong>Лайков:</strong> <span id="totalLikesSum">0</span></div>
+        </div>
+        <div style="padding: 0 12px;">
+            <textarea id="postContent" placeholder="Что нового?" rows="3"></textarea>
+            <button id="uploadPhotoBtn" class="photo-upload">📸 Фото
+                <input type="file" id="photoInput" accept="image/*">
+            </button>
+            <div id="imagePreviewContainer"></div>
+            <button id="createPostBtn">Опубликовать</button>
+        </div>
+        <div id="feedContainer"></div>
+    </div>
+    
+    <div id="screenProfile" class="screen">
+        <button id="backToMainFromProfile">← Назад</button>
+        <div id="profileInfo"></div>
+        <div class="profile-stats" id="profileStats"></div>
+        <div id="profileActions"></div>
+        <h3>Посты пользователя</h3>
+        <div id="userPostsContainer"></div>
+    </div>
+    
+    <div id="screenChatList" class="screen">
+        <button id="backToMainFromChatList">← Назад</button>
+        <h3>Чаты (взаимные подписки)</h3>
+        <div id="chatsContainer"></div>
+    </div>
+    
+    <div id="screenChat" class="screen">
+        <div class="chat-header">
+            <button id="backToChatList" style="width: auto; padding: 8px 16px;">← Назад</button>
+            <h3 id="chatWithName"></h3>
+        </div>
+        <div id="chatMessages" class="chat-messages"></div>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="chatMessageInput" placeholder="Сообщение..." style="flex: 1;">
+            <button id="sendMessageBtn" style="width: auto; padding: 12px 20px;">📤</button>
+        </div>
+    </div>
+    
+    <div id="screenShop" class="screen">
+        <button id="backToMainFromShop">← Назад</button>
+        <button id="buySubWeek">1 неделя - 100</button>
+        <button id="buySubMonth">1 месяц - 350</button>
+        <button id="buySubHalfYear">6 месяцев - 1700</button>
+        <button id="buySubYear">1 год - 2200</button>
+        <hr>
+        <button id="createClanBtn">Создать клан (500)</button>
+        <input type="text" id="joinClanName" placeholder="Название клана">
+        <button id="joinClanBtn">Вступить</button>
+        <hr>
+        <button id="upgradeClanSlot30">30→50 мест (800)</button>
+        <button id="upgradeClanSlot50">50→75 мест (1200)</button>
+        <button id="upgradeClanSlot75">75→100 мест (1600)</button>
+    </div>
+    
+    <div id="screenSearch" class="screen">
+        <button id="backToMainFromSearch">← Назад</button>
+        <input type="text" id="searchUsernameInput" placeholder="Юзернейм">
+        <button id="searchUserBtn">Найти</button>
+        <div id="searchResult"></div>
+    </div>
+    
+    <div class="bottom-nav" id="bottomNav" style="display: none;">
+        <button id="navFeed">🏠 Лента</button>
+        <button id="navChats">💬 Чаты</button>
+        <button id="navProfile">👤 Профиль</button>
+        <button id="navShop">🛒 Магазин</button>
+        <button id="navSearch">🔍 Поиск</button>
+    </div>
+</div>
+
+<div id="imageModal" class="modal">
+    <div class="modal-close" onclick="closeModal()">✕</div>
+    <img id="modalImage" src="">
+</div>
+
+<script>
+// ========== ДАННЫЕ ==========
+let users = JSON.parse(localStorage.getItem('messege_users')) || [];
+let posts = JSON.parse(localStorage.getItem('messege_posts')) || [];
+let clans = JSON.parse(localStorage.getItem('messege_clans')) || [];
+let messages = JSON.parse(localStorage.getItem('messege_messages')) || {};
+let currentUserId = localStorage.getItem('messege_currentUser');
+let currentPhotoData = null;
+let viewingUserId = null;
+let currentChatPartnerId = null;
+
+function saveAll() {
+    localStorage.setItem('messege_users', JSON.stringify(users));
+    localStorage.setItem('messege_posts', JSON.stringify(posts));
+    localStorage.setItem('messege_clans', JSON.stringify(clans));
+    localStorage.setItem('messege_messages', JSON.stringify(messages));
+}
+
+function getUserById(id) { return users.find(u => u.id == id); }
+function getUserByUsername(uname) { return users.find(u => u.username === uname); }
+function getCurrentUser() { return currentUserId ? getUserById(currentUserId) : null; }
+
+// ========== МОНЕТЫ ==========
+function recalcMcoinsForUser(user) {
+    if(!user) return;
+    let totalLikes = 0;
+    posts.forEach(p => { if(p.authorId === user.id) totalLikes += p.likes.length; });
+    user.mcoins = (user.followers.length || 0) + Math.floor(totalLikes / 500) + (user.extraMcoins || 0);
+}
+
+function updateAllMcoins() { users.forEach(u => recalcMcoinsForUser(u)); saveAll(); }
+
+// ========== ПОДПИСКИ - ИСПРАВЛЕНО ==========
+function isMutualFollow(user1Id, user2Id) {
+    let user1 = getUserById(user1Id);
+    let user2 = getUserById(user2Id);
+    return user1 && user2 && user1.followers && user2.followers && 
+           user1.followers.includes(user2Id) && user2.followers.includes(user1Id);
+}
+
+function followUser(curId, targetId) {
+    if(curId == targetId) {
+        console.log('Нельзя подписаться на себя');
+        return false;
+    }
+    let target = getUserById(targetId);
+    if(!target) {
+        console.log('Целевой пользователь не найден');
+        return false;
+    }
+    if(!target.followers) target.followers = [];
+    if(!target.followers.includes(curId)) {
+        target.followers.push(curId);
+        recalcMcoinsForUser(target);
+        saveAll();
+        console.log(`Подписались на ${target.fullname}`);
+        return true;
+    }
+    console.log('Уже подписан');
+    return false;
+}
+
+function unfollowUser(curId, targetId) {
+    let target = getUserById(targetId);
+    if(!target) return false;
+    if(!target.followers) target.followers = [];
+    let index = target.followers.indexOf(curId);
+    if(index !== -1) {
+        target.followers.splice(index, 1);
+        recalcMcoinsForUser(target);
+        saveAll();
+        console.log(`Отписались от ${target.fullname}`);
+        return true;
+    }
+    return false;
+}
+
+// ========== ЧАТЫ ==========
+function sendMessage(fromId, toId, text) {
+    if(!text.trim()) return false;
+    let chatId = [fromId, toId].sort().join('_');
+    if(!messages[chatId]) messages[chatId] = [];
+    messages[chatId].push({
+        fromId: fromId,
+        text: text,
+        timestamp: Date.now(),
+        read: false
+    });
+    saveAll();
+    return true;
+}
+
+function getUnreadCount(userId, chatPartnerId) {
+    let chatId = [userId, chatPartnerId].sort().join('_');
+    let chat = messages[chatId] || [];
+    return chat.filter(m => m.fromId === chatPartnerId && !m.read).length;
+}
+
+function markAsRead(userId, chatPartnerId) {
+    let chatId = [userId, chatPartnerId].sort().join('_');
+    if(messages[chatId]) {
+        messages[chatId].forEach(m => {
+            if(m.fromId === chatPartnerId && !m.read) m.read = true;
+        });
+        saveAll();
+    }
+}
+
+// ========== ЛАЙКИ ==========
+function toggleLike(postId, userId) {
+    let post = posts.find(p => p.id == postId);
+    if(!post || post.likes.includes(userId)) return false;
+    post.likes.push(userId);
+    let author = getUserById(post.authorId);
+    if(author) recalcMcoinsForUser(author);
+    saveAll();
+    return true;
+}
+
+function addComment(postId, userId, text) {
+    let post = posts.find(p => p.id == postId);
+    if(!post || !text.trim()) return false;
+    if(!post.comments) post.comments = [];
+    post.comments.push({ userId: userId, text: text, timestamp: Date.now() });
+    saveAll();
+    return true;
+}
+
+// ========== НАГРАДЫ ==========
+function getUserBadge(user) {
+    if(!user || !user.followers) return null;
+    let count = user.followers.length;
+    if(count >= 500000) return { symbol: '💎' };
+    if(count >= 250000) return { symbol: '⭐' };
+    if(count >= 150000) return { symbol: '✅' };
+    return null;
+}
+
+// ========== ОТОБРАЖЕНИЕ ==========
+function openModal(src) {
+    document.getElementById('imageModal').style.display = 'flex';
+    document.getElementById('modalImage').src = src;
+}
+function closeModal() { document.getElementById('imageModal').style.display = 'none'; }
+
+function viewUserProfile(userId) {
+    viewingUserId = userId;
+    renderUserProfile();
+    switchScreen('screenProfile');
+}
+
+function renderUserProfile() {
+    let user = viewingUserId ? getUserById(viewingUserId) : getCurrentUser();
+    let current = getCurrentUser();
+    if(!user || !current) return;
+    
+    let isOwnProfile = (viewingUserId === currentUserId || !viewingUserId);
+    let badge = getUserBadge(user);
+    let isFollowing = current.followers && current.followers.includes(user.id);
+    let isMutual = isMutualFollow(current.id, user.id);
+    
+    document.getElementById('profileInfo').innerHTML = `
+        <h3>${user.fullname} @${user.username} ${badge?.symbol || ''}</h3>
+        ${!isOwnProfile ? `<button id="followActionBtn" style="background:${isFollowing ? '#27ae60' : '#2c3e66'}">${isFollowing ? 'Отписаться' : 'Подписаться'}</button>` : ''}
+        ${!isOwnProfile && isMutual ? `<button id="chatActionBtn" style="background:#8e44ad;">💬 Написать</button>` : ''}
+    `;
+    
+    document.getElementById('profileStats').innerHTML = `
+        <div class="profile-stat">
+            <div class="profile-stat-value">${user.followers?.length || 0}</div>
+            <div class="profile-stat-label">Подписчики</div>
+        </div>
+        <div class="profile-stat">
+            <div class="profile-stat-value">${posts.filter(p => p.authorId === user.id).length}</div>
+            <div class="profile-stat-label">Посты</div>
+        </div>
+        <div class="profile-stat">
+            <div class="profile-stat-value">${user.mcoins || 0}</div>
+            <div class="profile-stat-label">Монеты</div>
+        </div>
+    `;
+    
+    let clan = clans.find(c => c.members && c.members.includes(user.id));
+    let mutualCount = users.filter(u => isMutualFollow(user.id, u.id)).length;
+    document.getElementById('profileActions').innerHTML = `
+        <div><strong>Клан:</strong> ${clan ? clan.name : 'Нет'}</div>
+        <div><strong>Взаимных подписок:</strong> ${mutualCount}</div>
+    `;
+    
+    let userPosts = posts.filter(p => p.authorId === user.id).reverse();
+    document.getElementById('userPostsContainer').innerHTML = userPosts.map(p => `
+        <div class="post-card">
+            <div>${p.text.replace(/\n/g, '<br>')}</div>
+            ${p.imageData ? `<img src="${p.imageData}" class="post-image" onclick="openModal('${p.imageData}')">` : ''}
+            <div style="margin-top:8px;">❤️ ${p.likes?.length || 0} | 💬 ${p.comments?.length || 0}</div>
+        </div>
+    `).join('');
+    
+    let followBtn = document.getElementById('followActionBtn');
+    if(followBtn) {
+        followBtn.onclick = () => {
+            if(isFollowing) {
+                unfollowUser(current.id, user.id);
+            } else {
+                followUser(current.id, user.id);
+            }
+            renderUserProfile();
+            renderFeed();
+            updateTopStats();
+            renderChatList();
+        };
+    }
+    
+    let chatBtn = document.getElementById('chatActionBtn');
+    if(chatBtn) {
+        chatBtn.onclick = () => openChatWith(user.id);
+    }
+}
+
+function openChatWith(userId) {
+    let partner = getUserById(userId);
+    if(!partner) return;
+    currentChatPartnerId = userId;
+    document.getElementById('chatWithName').innerText = partner.fullname;
+    document.getElementById('chatWithName').dataset.partnerId = userId;
+    renderChatMessages(userId);
+    switchScreen('screenChat');
+}
+
+function renderChatMessages(partnerId) {
+    let current = getCurrentUser();
+    if(!current) return;
+    let chatId = [current.id, partnerId].sort().join('_');
+    let msgs = messages[chatId] || [];
+    let container = document.getElementById('chatMessages');
+    container.innerHTML = msgs.map(m => `
+        <div class="chat-message ${m.fromId === current.id ? 'message-own' : 'message-other'}">
+            <div>${escapeHtml(m.text)}</div>
+            <div style="font-size: 10px; color: #888;">${new Date(m.timestamp).toLocaleTimeString()}</div>
+        </div>
+    `).join('');
+    container.scrollTop = container.scrollHeight;
+    
+    markAsRead(current.id, partnerId);
+    renderChatList();
+}
+
+function renderChatList() {
+    let current = getCurrentUser();
+    if(!current) return;
+    let mutualUsers = users.filter(u => u.id !== current.id && isMutualFollow(current.id, u.id));
+    let container = document.getElementById('chatsContainer');
+    if(!container) return;
+    
+    container.innerHTML = mutualUsers.map(u => {
+        let unread = getUnreadCount(current.id, u.id);
+        return `
+            <div class="chat-list-item" onclick="openChatWith('${u.id}')">
+                <div>
+                    <strong>${escapeHtml(u.fullname)}</strong><br>
+                    <small>@${escapeHtml(u.username)}</small>
+                </div>
+                ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
+            </div>
+        `;
+    }).join('');
+    
+    if(mutualUsers.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 40px;">Нет чатов. Подпишитесь друг на друга!</p>';
+    }
+}
+
+function escapeHtml(text) {
+    if(!text) return '';
+    let div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function renderFeed() {
+    let container = document.getElementById('feedContainer');
+    if(!container) return;
+    let current = getCurrentUser();
+    if(!current) return;
+    
+    if(posts.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 40px;">Нет постов. Создайте первый!</p>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    let reversed = [...posts].reverse();
+    
+    for(let p of reversed) {
+        let author = getUserById(p.authorId);
+        if(!author) continue;
+        
+        let badge = getUserBadge(author);
+        let isFollowing = current.followers && current.followers.includes(author.id);
+        let isMutual = isMutualFollow(current.id, author.id);
+        
+        let postDiv = document.createElement('div');
+        postDiv.className = 'post-card';
+        postDiv.innerHTML = `
+            <div class="post-header">
+                <div class="username" onclick="viewUserProfile('${author.id}')">
+                    <strong>${escapeHtml(author.fullname)}</strong>
+                    ${badge ? `<span>${badge.symbol}</span>` : ''}
+                    <span class="badge">@${escapeHtml(author.username)}</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="follow-btn-header ${isFollowing ? 'following' : ''}" data-userid="${author.id}">
+                        ${isFollowing ? '✓' : '+'}
+                    </button>
+                    ${isMutual ? `<button class="chat-small-btn" data-userid="${author.id}">💬</button>` : ''}
+                </div>
+            </div>
+            <div>${escapeHtml(p.text).replace(/\n/g, '<br>')}</div>
+            ${p.imageData ? `<img src="${p.imageData}" class="post-image" onclick="openModal('${p.imageData}')">` : ''}
+            <div class="actions">
+                <button class="like-btn" data-postid="${p.id}">❤️ ${p.likes?.length || 0}</button>
+                <button class="comment-toggle-btn" data-postid="${p.id}">💬 ${p.comments?.length || 0}</button>
+            </div>
+            <div id="comments-${p.id}" style="display:none; margin-top: 12px;">
+                <div class="comments-list">
+                    ${(p.comments || []).map(c => {
+                        let cu = getUserById(c.userId);
+                        return `<div class="comment-item"><strong>${cu ? escapeHtml(cu.fullname) : '?'}</strong>: ${escapeHtml(c.text)}</div>`;
+                    }).join('')}
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <input type="text" class="comment-input" data-postid="${p.id}" placeholder="Комментарий..." style="flex: 1; margin: 0;">
+                    <button class="submit-comment-btn" data-postid="${p.id}" style="width: auto; padding: 12px 16px; margin: 0;">OK</button>
+                </div>
+            </div>
+        `;
+        container.appendChild(postDiv);
+    }
+    
+    attachFeedEvents();
+}
+
+function attachFeedEvents() {
+    let current = getCurrentUser();
+    if(!current) return;
+    
+    document.querySelectorAll('.follow-btn-header').forEach(btn => {
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            let targetId = btn.dataset.userid;
+            let isFollowing = current.followers && current.followers.includes(targetId);
+            
+            if(isFollowing) {
+                unfollowUser(current.id, targetId);
+                btn.classList.remove('following');
+                btn.innerHTML = '+';
+            } else {
+                followUser(current.id, targetId);
+                btn.classList.add('following');
+                btn.innerHTML = '✓';
+            }
+            renderFeed();
+            updateTopStats();
+            renderChatList();
+        };
+    });
+    
+    document.querySelectorAll('.chat-small-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            let targetId = btn.dataset.userid;
+            openChatWith(targetId);
+        };
+    });
+    
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.onclick = () => {
+            let postId = btn.dataset.postid;
+            if(toggleLike(postId, current.id)) {
+                renderFeed();
+                updateTopStats();
+            } else {
+                alert('Уже лайкнуто!');
+            }
+        };
+    });
+    
+    document.querySelectorAll('.comment-toggle-btn').forEach(btn => {
+        btn.onclick = () => {
+            let postId = btn.dataset.postid;
+            let div = document.getElementById(`comments-${postId}`);
+            div.style.display = div.style.display === 'none' ? 'block' : 'none';
+        };
+    });
+    
+    document.querySelectorAll('.submit-comment-btn').forEach(btn => {
+        btn.onclick = () => {
+            let postId = btn.dataset.postid;
+            let input = document.querySelector(`.comment-input[data-postid="${postId}"]`);
+            if(input && input.value.trim()) {
+                addComment(postId, current.id, input.value.trim());
+                input.value = '';
+                renderFeed();
+            }
+        };
+    });
+}
+
+function updateTopStats() {
+    let u = getCurrentUser();
+    if(u) {
+        recalcMcoinsForUser(u);
+        document.getElementById('mcoinBalance').innerText = u.mcoins || 0;
+        document.getElementById('followersCount').innerText = u.followers?.length || 0;
+        let total = 0;
+        posts.forEach(p => { if(p.authorId === u.id) total += p.likes?.length || 0; });
+        document.getElementById('totalLikesSum').innerText = total;
+        let badge = getUserBadge(u);
+        document.getElementById('userNickDisplay').innerHTML = `${escapeHtml(u.fullname)} ${badge?.symbol || ''}`;
+    }
+}
+
+function updateOwnProfile() {
+    viewingUserId = null;
+    renderUserProfile();
+}
+
+function switchScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+    document.getElementById(id).classList.add('active-screen');
+    let bottomNav = document.getElementById('bottomNav');
+    if(bottomNav) bottomNav.style.display = (id === 'screenLogin' || id === 'screenRegister') ? 'none' : 'flex';
+    
+    if(id === 'screenMain') { renderFeed(); updateTopStats(); }
+    if(id === 'screenProfile') { 
+        if(viewingUserId === null) updateOwnProfile();
+        else renderUserProfile();
+    }
+    if(id === 'screenChatList') renderChatList();
+}
+
+// ========== ФОТО ==========
+document.getElementById('photoInput')?.addEventListener('change', (e) => {
+    let file = e.target.files[0];
+    if(file) {
+        let reader = new FileReader();
+        reader.onload = (ev) => {
+            currentPhotoData = ev.target.result;
+            document.getElementById('imagePreviewContainer').innerHTML = `
+                <img src="${currentPhotoData}" class="image-preview">
+                <button id="removePhotoBtn" class="remove-image">Удалить</button>
+            `;
+            document.getElementById('removePhotoBtn')?.addEventListener('click', () => {
+                currentPhotoData = null;
+                document.getElementById('imagePreviewContainer').innerHTML = '';
+                document.getElementById('photoInput').value = '';
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// ========== РЕГИСТРАЦИЯ ==========
+document.getElementById('completeRegBtn')?.addEventListener('click', () => {
+    let fn = document.getElementById('regFullname').value.trim();
+    let un = document.getElementById('regUsername').value.trim();
+    let pw = document.getElementById('regPassword').value;
+    if(!fn || !un || !pw) return alert('Заполните все поля');
+    if(getUserByUsername(un)) return alert('Юзернейм занят');
+    users.push({ 
+        id: Date.now().toString(), 
+        fullname: fn, 
+        username: un, 
+        password: pw, 
+        followers: [], 
+        mcoins: 0, 
+        extraMcoins: 0, 
+        subscriptionUntil: null, 
+        neonNameActive: false, 
+        lastSuperlike: 0 
+    });
+    saveAll();
+    alert('Регистрация успешна!');
+    switchScreen('screenLogin');
+});
+
+document.getElementById('doLoginBtn')?.addEventListener('click', () => {
+    let un = document.getElementById('loginUsername').value;
+    let pw = document.getElementById('loginPassword').value;
+    let u = users.find(u => u.username === un && u.password === pw);
+    if(u) { 
+        currentUserId = u.id; 
+        localStorage.setItem('messege_currentUser', currentUserId); 
+        updateAllMcoins(); 
+        switchScreen('screenMain'); 
+    } else alert('Неверно');
+});
+
+document.getElementById('createPostBtn')?.addEventListener('click', () => {
+    let text = document.getElementById('postContent').value;
+    if(!text.trim() && !currentPhotoData) return alert('Напишите текст или добавьте фото');
+    let current = getCurrentUser();
+    if(!current) return;
+    posts.unshift({ 
+        id: Date.now().toString(), 
+        authorId: current.id, 
+        text: text.trim() || "📸", 
+        likes: [], 
+        comments: [], 
+        imageData: currentPhotoData 
+    });
+    saveAll();
+    document.getElementById('postContent').value = '';
+    document.getElementById('imagePreviewContainer').innerHTML = '';
+    document.getElementById('photoInput').value = '';
+    currentPhotoData = null;
+    renderFeed();
+    updateTopStats();
+});
+
+document.getElementById('sendMessageBtn')?.addEventListener('click', () => {
+    let current = getCurrentUser();
+    if(!current || !currentChatPartnerId) return;
+    let input = document.getElementById('chatMessageInput');
+    let text = input.value;
+    if(sendMessage(current.id, currentChatPartnerId, text)) {
+        input.value = '';
+        renderChatMessages(currentChatPartnerId);
+    }
+});
+
+// ========== НАВИГАЦИЯ ==========
+document.getElementById('toRegBtn')?.addEventListener('click', () => switchScreen('screenRegister'));
+document.getElementById('backToLoginBtn')?.addEventListener('click', () => switchScreen('screenLogin'));
+document.getElementById('logoutBtn')?.addEventListener('click', () => { 
+    localStorage.removeItem('messege_currentUser'); 
+    currentUserId = null; 
+    currentChatPartnerId = null;
+    switchScreen('screenLogin'); 
+});
+document.getElementById('backToMainFromProfile')?.addEventListener('click', () => switchScreen('screenMain'));
+document.getElementById('backToMainFromChatList')?.addEventListener('click', () => switchScreen('screenMain'));
+document.getElementById('backToChatList')?.addEventListener('click', () => switchScreen('screenChatList'));
+document.getElementById('backToMainFromShop')?.addEventListener('click', () => switchScreen('screenMain'));
+document.getElementById('backToMainFromSearch')?.addEventListener('click', () => switchScreen('screenMain'));
+
+document.getElementById('navFeed')?.addEventListener('click', () => switchScreen('screenMain'));
+document.getElementById('navChats')?.addEventListener('click', () => switchScreen('screenChatList'));
+document.getElementById('navProfile')?.addEventListener('click', () => { viewingUserId = null; switchScreen('screenProfile'); });
+document.getElementById('navShop')?.addEventListener('click', () => switchScreen('screenShop'));
+document.getElementById('navSearch')?.addEventListener('click', () => switchScreen('screenSearch'));
+
+// ========== МАГАЗИН ==========
+function buySub(days,cost) { 
+    let u=getCurrentUser(); 
+    if(u && u.mcoins>=cost) { 
+        u.mcoins-=cost; 
+        let till=Math.max(u.subscriptionUntil||0,Date.now()); 
+        u.subscriptionUntil=till+days*86400000; 
+        saveAll(); 
+        alert('Подписка активирована!'); 
+        updateTopStats(); 
+    } else alert('Не хватает монет'); 
+}
+document.getElementById('buySubWeek')?.addEventListener('click',()=>buySub(7,100));
+document.getElementById('buySubMonth')?.addEventListener('click',()=>buySub(30,350));
+document.getElementById('buySubHalfYear')?.addEventListener('click',()=>buySub(180,1700));
+document.getElementById('buySubYear')?.addEventListener('click',()=>buySub(365,2200));
+
+document.getElementById('createClanBtn')?.addEventListener('click',()=>{
+    let u=getCurrentUser();
+    if(!u) return;
+    if(u.mcoins>=500 && !clans.find(c=>c.members && c.members.includes(u.id))) {
+        let name=prompt('Название клана');
+        if(name && !clans.find(c=>c.name===name)) { 
+            u.mcoins-=500; 
+            clans.push({ 
+                id:Date.now().toString(), 
+                name:name, 
+                ownerId:u.id, 
+                members:[u.id], 
+                maxSize:30 
+            }); 
+            saveAll(); 
+            alert('Клан создан!'); 
+            updateOwnProfile(); 
+        } else alert('Название занято или отмена');
+    } else alert('Уже в клане или нет 500 монет');
+});
+
+document.getElementById('joinClanBtn')?.addEventListener('click',()=>{
+    let u=getCurrentUser();
+    let clanName=document.getElementById('joinClanName').value;
+    let clan=clans.find(c=>c.name===clanName);
+    if(clan && clan.members && !clan.members.includes(u.id) && clan.members.length<clan.maxSize) { 
+        clan.members.push(u.id); 
+        saveAll(); 
+        alert('Вступили в клан!'); 
+        updateOwnProfile(); 
+    } else alert('Не удалось вступить');
+});
+
+function upgradeClan(cL,nL,cost) { 
+    let u=getCurrentUser(); 
+    let c=clans.find(c=>c.members && c.members.includes(u.id)); 
+    if(c && c.ownerId===u.id && c.maxSize===cL && u.mcoins>=cost) { 
+        c.maxSize=nL; 
+        u.mcoins-=cost; 
+        saveAll(); 
+        alert(`Клан расширен до ${nL} мест!`); 
+    } else alert('Нет прав или монет'); 
+}
+document.getElementById('upgradeClanSlot30')?.addEventListener('click',()=>upgradeClan(30,50,800));
+document.getElementById('upgradeClanSlot50')?.addEventListener('click',()=>upgradeClan(50,75,1200));
+document.getElementById('upgradeClanSlot75')?.addEventListener('click',()=>upgradeClan(75,100,1600));
+
+// ========== ПОИСК ==========
+document.getElementById('searchUserBtn')?.addEventListener('click', () => {
+    let name = document.getElementById('searchUsernameInput').value;
+    let found = users.find(u => u.username === name && u.id !== currentUserId);
+    let div = document.getElementById('searchResult');
+    if(found) {
+        div.innerHTML = `<div class="post-card">
+            <strong>${escapeHtml(found.fullname)}</strong> @${escapeHtml(found.username)}
+            <button id="viewProfileBtn" style="margin-top:10px;">👤 Профиль</button>
+        </div>`;
+        document.getElementById('viewProfileBtn')?.addEventListener('click', () => {
+            viewUserProfile(found.id);
+        });
+    } else div.innerHTML = '<p>Не найден</p>';
+});
+
+// ========== ЗАПУСК ==========
+if(currentUserId && getUserById(currentUserId)) {
+    switchScreen('screenMain');
+} else {
+    switchScreen('screenLogin');
+}
+updateAllMcoins();
+
+window.viewUserProfile = viewUserProfile;
+window.openChatWith = openChatWith;
+window.openModal = openModal;
+window.closeModal = closeModal;
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>MESSEGE — соцсеть с чатами</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0c12;
+            color: #eef2ff;
+        }
+
+        .app {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #0f1117;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .screen {
+            padding: 20px 16px 80px 16px;
+            display: none;
+        }
+
+        .active-screen {
+            display: block;
+        }
+
+        input, textarea, button {
+            width: 100%;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            border-radius: 16px;
+            border: none;
+            background: #1e1f2a;
+            color: white;
+            font-size: 16px;
+        }
+
+        button {
+            background: #2e6eff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        .post-card, .comment-item, .chat-message {
+            background: #171a22;
+            border-radius: 24px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            gap: 8px;
+        }
+
+        .username {
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .username:hover {
+            opacity: 0.8;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            background: #2c2f3a;
+            padding: 2px 8px;
+            border-radius: 40px;
+        }
+
+        .green-check { color: #2ecc71; font-weight: bold; }
+        .gold-check { color: #f1c40f; }
+        .diamond { color: #00d4ff; }
+        .neon-name { color: #0ff; text-shadow: 0 0 3px cyan; }
+        .sub-line { text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: #2e6eff; }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+        
+        .actions button {
+            width: auto;
+            flex: 1;
+            min-width: 70px;
+            padding: 8px;
+            font-size: 14px;
+        }
+        
+        .topbar {
+            background: #0b0e14;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .post-image {
+            max-width: 100%;
+            border-radius: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            border-radius: 16px;
+            margin-top: 10px;
+        }
+        
+        .remove-image {
+            background: #e74c3c;
+            padding: 8px;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .photo-upload {
+            background: #2c3e66;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .photo-upload input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal img {
+            max-width: 90%;
+            max-height: 90%;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.5);
+            width: 44px;
+            height: 44px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 28px;
+        }
+        
+        .chat-list-item {
+            background: #171a22;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-list-item:hover {
+            background: #1e2130;
+        }
+        
+        .chat-header {
+            position: sticky;
+            top: 0;
+            background: #0b0e14;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .chat-messages {
+            max-height: 55vh;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+        
+        .chat-message {
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .message-own {
+            background: #2e6eff;
+            margin-left: 40px;
+        }
+        
+        .message-other {
+            background: #1e1f2a;
+            margin-right: 40px;
+        }
+        
+        .profile-stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 16px;
+            background: #171a22;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .profile-stat {
+            text-align: center;
+        }
+        
+        .profile-stat-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .profile-stat-label {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            max-width: 600px;
+            width: 100%;
+            background: #0b0e14;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            border-top: 1px solid #1e1f2a;
+        }
+        
+        .bottom-nav button {
+            background: transparent;
+            width: auto;
+            margin: 0;
+            padding: 8px;
+            font-size: 12px;
+        }
+        
+        .unread-badge {
+            background: red;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 10px;
+            margin-left: 5px;
+        }
+        
+        .follow-btn-header {
+            background: #2c3e66;
+            padding: 6px 12px;
+            font-size: 12px;
+            width: auto;
+            margin: 0;
+            border-radius: 20px;
+        }
+        
+        .follow-btn-header.following {
+            background: #27ae60;
+        }
+        
+        .chat-small-btn {
+            background: #8e44ad;
+            padding: 6px 12px;
+            font-size: 12px;
+            width: auto;
+            margin: 0;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="app" id="appRoot">
+    <div id="screenLogin" class="screen active-screen">
+        <h2>MESSEGE</h2>
+        <input type="text" id="loginUsername" placeholder="Юзернейм">
+        <input type="password" id="loginPassword" placeholder="Пароль">
+        <button id="doLoginBtn">Войти</button>
+        <button id="toRegBtn" style="background:#3a3f55;">Регистрация</button>
+    </div>
+    
+    <div id="screenRegister" class="screen">
+        <h2>Регистрация</h2>
+        <input type="text" id="regFullname" placeholder="Никнейм">
+        <input type="text" id="regUsername" placeholder="Юзернейм">
+        <input type="password" id="regPassword" placeholder="Пароль">
+        <button id="completeRegBtn">Зарегистрироваться</button>
+        <button id="backToLoginBtn" style="background:#3a3f55;">Назад</button>
+    </div>
+    
+    <div id="screenMain" class="screen">
+        <div class="topbar">
+            <span><strong>MESSEGE</strong></span>
+            <span id="userNickDisplay"></span>
+            <button id="logoutBtn" style="width: auto; padding: 6px 12px;">Выйти</button>
+        </div>
+        <div style="padding: 12px;">
+            <div><strong>Баланс:</strong> <span id="mcoinBalance">0</span> 🪙</div>
+            <div><strong>Подписчики:</strong> <span id="followersCount">0</span> | <strong>Лайков:</strong> <span id="totalLikesSum">0</span></div>
+        </div>
+        <div style="padding: 0 12px;">
+            <textarea id="postContent" placeholder="Что нового?" rows="3"></textarea>
+            <button id="uploadPhotoBtn" class="photo-upload">📸 Фото
+                <input type="file" id="photoInput" accept="image/*">
+            </button>
+            <div id="imagePreviewContainer"></div>
+            <button id="createPostBtn">Опубликовать</button>
+        </div>
+        <div id="feedContainer"></div>
+    </div>
+    
+    <div id="screenProfile" class="screen">
+        <button id="backToMainFromProfile">← Назад</button>
+        <div id="profileInfo"></div>
+        <div class="profile-stats" id="profileStats"></div>
+        <div id="profileActions"></div>
+        <h3>Посты пользователя</h3>
+        <div id="userPostsContainer"></div>
+    </div>
+    
+    <div id="screenChatList" class="screen">
+        <button id="backToMainFromChatList">← Назад</button>
+        <h3>Чаты (взаимные подписки)</h3>
+        <div id="chatsContainer"></div>
+    </div>
+    
+    <div id="screenChat" class="screen">
+        <div class="chat-header">
+            <button id="backToChatList" style="width: auto; padding: 8px 16px;">← Назад</button>
+            <h3 id="chatWithName"></h3>
+        </div>
+        <div id="chatMessages" class="chat-messages"></div>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="chatMessageInput" placeholder="Сообщение..." style="flex: 1;">
+            <button id="sendMessageBtn" style="width: auto; padding: 12px 20px;">📤</button>
+        </div>
+    </div>
+    
+    <div id="screenShop" class="screen">
+        <button id="backToMainFromShop">← Назад</button>
+        <button id="buySubWeek">1 неделя - 100</button>
+        <button id="buySubMonth">1 месяц - 350</button>
+        <button id="buySubHalfYear">6 месяцев - 1700</button>
+        <button id="buySubYear">1 год - 2200</button>
+        <hr>
+        <button id="createClanBtn">Создать клан (500)</button>
+        <input type="text" id="joinClanName" placeholder="Название клана">
+        <button id="joinClanBtn">Вступить</button>
+        <hr>
+        <button id="upgradeClanSlot30">30→50 мест (800)</button>
+        <button id="upgradeClanSlot50">50→75 мест (1200)</button>
+        <button id="upgradeClanSlot75">75→100 мест (1600)</button>
+    </div>
+    
+    <div id="screenSearch" class="screen">
+        <button id="backToMainFromSearch">← Назад</button>
+        <input type="text" id="searchUsernameInput" placeholder="Юзернейм">
+        <button id="searchUserBtn">Найти</button>
+        <div id="searchResult"></div>
+    </div>
+    
+    <div class="bottom-nav" id="bottomNav" style="display: none;">
+        <button id="navFeed">🏠 Лента</button>
+        <button id="navChats">💬 Чаты</button>
+        <button id="navProfile">👤 Профиль</button>
+        <button id="navShop">🛒 Магазин</button>
+        <button id="navSearch">🔍 Поиск</button>
+    </div>
+</div>
+
+<div id="imageModal" class="modal">
+    <div class="modal-close" onclick="closeModal()">✕</div>
+    <img id="modalImage" src="">
+</div>
+
+<script>
+// ========== ДАННЫЕ ==========
+let users = JSON.parse(localStorage.getItem('messege_users')) || [];
+let posts = JSON.parse(localStorage.getItem('messege_posts')) || [];
+let clans = JSON.parse(localStorage.getItem('messege_clans')) || [];
+let messages = JSON.parse(localStorage.getItem('messege_messages')) || {};
+let currentUserId = localStorage.getItem('messege_currentUser');
+let currentPhotoData = null;
+let viewingUserId = null;
+let currentChatPartnerId = null;
+
+function saveAll() {
+    localStorage.setItem('messege_users', JSON.stringify(users));
+    localStorage.setItem('messege_posts', JSON.stringify(posts));
+    localStorage.setItem('messege_clans', JSON.stringify(clans));
+    localStorage.setItem('messege_messages', JSON.stringify(messages));
+}
+
+function getUserById(id) { return users.find(u => u.id == id); }
+function getUserByUsername(uname) { return users.find(u => u.username === uname); }
+function getCurrentUser() { return currentUserId ? getUserById(currentUserId) : null; }
+
+// ========== МОНЕТЫ ==========
+function recalcMcoinsForUser(user) {
+    if(!user) return;
+    let totalLikes = 0;
+    posts.forEach(p => { if(p.authorId === user.id) totalLikes += p.likes.length; });
+    user.mcoins = (user.followers.length || 0) + Math.floor(totalLikes / 500) + (user.extraMcoins || 0);
+}
+
+function updateAllMcoins() { users.forEach(u => recalcMcoinsForUser(u)); saveAll(); }
+
+// ========== ПОДПИСКИ - ИСПРАВЛЕНО ==========
+function isMutualFollow(user1Id, user2Id) {
+    let user1 = getUserById(user1Id);
+    let user2 = getUserById(user2Id);
+    return user1 && user2 && user1.followers && user2.followers && 
+           user1.followers.includes(user2Id) && user2.followers.includes(user1Id);
+}
+
+function followUser(curId, targetId) {
+    if(curId == targetId) {
+        console.log('Нельзя подписаться на себя');
+        return false;
+    }
+    let target = getUserById(targetId);
+    if(!target) {
+        console.log('Целевой пользователь не найден');
+        return false;
+    }
+    if(!target.followers) target.followers = [];
+    if(!target.followers.includes(curId)) {
+        target.followers.push(curId);
+        recalcMcoinsForUser(target);
+        saveAll();
+        console.log(`Подписались на ${target.fullname}`);
+        return true;
+    }
+    console.log('Уже подписан');
+    return false;
+}
+
+function unfollowUser(curId, targetId) {
+    let target = getUserById(targetId);
+    if(!target) return false;
+    if(!target.followers) target.followers = [];
+    let index = target.followers.indexOf(curId);
+    if(index !== -1) {
+        target.followers.splice(index, 1);
+        recalcMcoinsForUser(target);
+        saveAll();
+        console.log(`Отписались от ${target.fullname}`);
+        return true;
+    }
+    return false;
+}
+
+// ========== ЧАТЫ ==========
+function sendMessage(fromId, toId, text) {
+    if(!text.trim()) return false;
+    let chatId = [fromId, toId].sort().join('_');
+    if(!messages[chatId]) messages[chatId] = [];
+    messages[chatId].push({
+        fromId: fromId,
+        text: text,
+        timestamp: Date.now(),
+        read: false
+    });
+    saveAll();
+    return true;
+}
+
+function getUnreadCount(userId, chatPartnerId) {
+    let chatId = [userId, chatPartnerId].sort().join('_');
+    let chat = messages[chatId] || [];
+    return chat.filter(m => m.fromId === chatPartnerId && !m.read).length;
+}
+
+function markAsRead(userId, chatPartnerId) {
+    let chatId = [userId, chatPartnerId].sort().join('_');
+    if(messages[chatId]) {
+        messages[chatId].forEach(m => {
+            if(m.fromId === chatPartnerId && !m.read) m.read = true;
+        });
+        saveAll();
+    }
+}
+
+// ========== ЛАЙКИ ==========
+function toggleLike(postId, userId) {
+    let post = posts.find(p => p.id == postId);
+    if(!post || post.likes.includes(userId)) return false;
+    post.likes.push(userId);
+    let author = getUserById(post.authorId);
+    if(author) recalcMcoinsForUser(author);
+    saveAll();
+    return true;
+}
+
+function addComment(postId, userId, text) {
+    let post = posts.find(p => p.id == postId);
+    if(!post || !text.trim()) return false;
+    if(!post.comments) post.comments = [];
+    post.comments.push({ userId: userId, text: text, timestamp: Date.now() });
+    saveAll();
+    return true;
+}
+
+// ========== НАГРАДЫ ==========
+function getUserBadge(user) {
+    if(!user || !user.followers) return null;
+    let count = user.followers.length;
+    if(count >= 500000) return { symbol: '💎' };
+    if(count >= 250000) return { symbol: '⭐' };
+    if(count >= 150000) return { symbol: '✅' };
+    return null;
+}
+
+// ========== ОТОБРАЖЕНИЕ ==========
+function openModal(src) {
+    document.getElementById('imageModal').style.display = 'flex';
+    document.getElementById('modalImage').src = src;
+}
+function closeModal() { document.getElementById('imageModal').style.display = 'none'; }
+
+function viewUserProfile(userId) {
+    viewingUserId = userId;
+    renderUserProfile();
+    switchScreen('screenProfile');
+}
+
+function renderUserProfile() {
+    let user = viewingUserId ? getUserById(viewingUserId) : getCurrentUser();
+    let current = getCurrentUser();
+    if(!user || !current) return;
+    
+    let isOwnProfile = (viewingUserId === currentUserId || !viewingUserId);
+    let badge = getUserBadge(user);
+    let isFollowing = current.followers && current.followers.includes(user.id);
+    let isMutual = isMutualFollow(current.id, user.id);
+    
+    document.getElementById('profileInfo').innerHTML = `
+        <h3>${user.fullname} @${user.username} ${badge?.symbol || ''}</h3>
+        ${!isOwnProfile ? `<button id="followActionBtn" style="background:${isFollowing ? '#27ae60' : '#2c3e66'}">${isFollowing ? 'Отписаться' : 'Подписаться'}</button>` : ''}
+        ${!isOwnProfile && isMutual ? `<button id="chatActionBtn" style="background:#8e44ad;">💬 Написать</button>` : ''}
+    `;
+    
+    document.getElementById('profileStats').innerHTML = `
+        <div class="profile-stat">
+            <div class="profile-stat-value">${user.followers?.length || 0}</div>
+            <div class="profile-stat-label">Подписчики</div>
+        </div>
+        <div class="profile-stat">
+            <div class="profile-stat-value">${posts.filter(p => p.authorId === user.id).length}</div>
+            <div class="profile-stat-label">Посты</div>
+        </div>
+        <div class="profile-stat">
+            <div class="profile-stat-value">${user.mcoins || 0}</div>
+            <div class="profile-stat-label">Монеты</div>
+        </div>
+    `;
+    
+    let clan = clans.find(c => c.members && c.members.includes(user.id));
+    let mutualCount = users.filter(u => isMutualFollow(user.id, u.id)).length;
+    document.getElementById('profileActions').innerHTML = `
+        <div><strong>Клан:</strong> ${clan ? clan.name : 'Нет'}</div>
+        <div><strong>Взаимных подписок:</strong> ${mutualCount}</div>
+    `;
+    
+    let userPosts = posts.filter(p => p.authorId === user.id).reverse();
+    document.getElementById('userPostsContainer').innerHTML = userPosts.map(p => `
+        <div class="post-card">
+            <div>${p.text.replace(/\n/g, '<br>')}</div>
+            ${p.imageData ? `<img src="${p.imageData}" class="post-image" onclick="openModal('${p.imageData}')">` : ''}
+            <div style="margin-top:8px;">❤️ ${p.likes?.length || 0} | 💬 ${p.comments?.length || 0}</div>
+        </div>
+    `).join('');
+    
+    let followBtn = document.getElementById('followActionBtn');
+    if(followBtn) {
+        followBtn.onclick = () => {
+            if(isFollowing) {
+                unfollowUser(current.id, user.id);
+            } else {
+                followUser(current.id, user.id);
+            }
+            renderUserProfile();
+            renderFeed();
+            updateTopStats();
+            renderChatList();
+        };
+    }
+    
+    let chatBtn = document.getElementById('chatActionBtn');
+    if(chatBtn) {
+        chatBtn.onclick = () => openChatWith(user.id);
+    }
+}
+
+function openChatWith(userId) {
+    let partner = getUserById(userId);
+    if(!partner) return;
+    currentChatPartnerId = userId;
+    document.getElementById('chatWithName').innerText = partner.fullname;
+    document.getElementById('chatWithName').dataset.partnerId = userId;
+    renderChatMessages(userId);
+    switchScreen('screenChat');
+}
+
+function renderChatMessages(partnerId) {
+    let current = getCurrentUser();
+    if(!current) return;
+    let chatId = [current.id, partnerId].sort().join('_');
+    let msgs = messages[chatId] || [];
+    let container = document.getElementById('chatMessages');
+    container.innerHTML = msgs.map(m => `
+        <div class="chat-message ${m.fromId === current.id ? 'message-own' : 'message-other'}">
+            <div>${escapeHtml(m.text)}</div>
+            <div style="font-size: 10px; color: #888;">${new Date(m.timestamp).toLocaleTimeString()}</div>
+        </div>
+    `).join('');
+    container.scrollTop = container.scrollHeight;
+    
+    markAsRead(current.id, partnerId);
+    renderChatList();
+}
+
+function renderChatList() {
+    let current = getCurrentUser();
+    if(!current) return;
+    let mutualUsers = users.filter(u => u.id !== current.id && isMutualFollow(current.id, u.id));
+    let container = document.getElementById('chatsContainer');
+    if(!container) return;
+    
+    container.innerHTML = mutualUsers.map(u => {
+        let unread = getUnreadCount(current.id, u.id);
+        return `
+            <div class="chat-list-item" onclick="openChatWith('${u.id}')">
+                <div>
+                    <strong>${escapeHtml(u.fullname)}</strong><br>
+                    <small>@${escapeHtml(u.username)}</small>
+                </div>
+                ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
+            </div>
+        `;
+    }).join('');
+    
+    if(mutualUsers.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 40px;">Нет чатов. Подпишитесь друг на друга!</p>';
+    }
+}
+
+function escapeHtml(text) {
+    if(!text) return '';
+    let div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function renderFeed() {
+    let container = document.getElementById('feedContainer');
+    if(!container) return;
+    let current = getCurrentUser();
+    if(!current) return;
+    
+    if(posts.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 40px;">Нет постов. Создайте первый!</p>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    let reversed = [...posts].reverse();
+    
+    for(let p of reversed) {
+        let author = getUserById(p.authorId);
+        if(!author) continue;
+        
+        let badge = getUserBadge(author);
+        let isFollowing = current.followers && current.followers.includes(author.id);
+        let isMutual = isMutualFollow(current.id, author.id);
+        
+        let postDiv = document.createElement('div');
+        postDiv.className = 'post-card';
+        postDiv.innerHTML = `
+            <div class="post-header">
+                <div class="username" onclick="viewUserProfile('${author.id}')">
+                    <strong>${escapeHtml(author.fullname)}</strong>
+                    ${badge ? `<span>${badge.symbol}</span>` : ''}
+                    <span class="badge">@${escapeHtml(author.username)}</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="follow-btn-header ${isFollowing ? 'following' : ''}" data-userid="${author.id}">
+                        ${isFollowing ? '✓' : '+'}
+                    </button>
+                    ${isMutual ? `<button class="chat-small-btn" data-userid="${author.id}">💬</button>` : ''}
+                </div>
+            </div>
+            <div>${escapeHtml(p.text).replace(/\n/g, '<br>')}</div>
+            ${p.imageData ? `<img src="${p.imageData}" class="post-image" onclick="openModal('${p.imageData}')">` : ''}
+            <div class="actions">
+                <button class="like-btn" data-postid="${p.id}">❤️ ${p.likes?.length || 0}</button>
+                <button class="comment-toggle-btn" data-postid="${p.id}">💬 ${p.comments?.length || 0}</button>
+            </div>
+            <div id="comments-${p.id}" style="display:none; margin-top: 12px;">
+                <div class="comments-list">
+                    ${(p.comments || []).map(c => {
+                        let cu = getUserById(c.userId);
+                        return `<div class="comment-item"><strong>${cu ? escapeHtml(cu.fullname) : '?'}</strong>: ${escapeHtml(c.text)}</div>`;
+                    }).join('')}
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <input type="text" class="comment-input" data-postid="${p.id}" placeholder="Комментарий..." style="flex: 1; margin: 0;">
+                    <button class="submit-comment-btn" data-postid="${p.id}" style="width: auto; padding: 12px 16px; margin: 0;">OK</button>
+                </div>
+            </div>
+        `;
+        container.appendChild(postDiv);
+    }
+    
+    attachFeedEvents();
+}
+
+function attachFeedEvents() {
+    let current = getCurrentUser();
+    if(!current) return;
+    
+    document.querySelectorAll('.follow-btn-header').forEach(btn => {
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            let targetId = btn.dataset.userid;
+            let isFollowing = current.followers && current.followers.includes(targetId);
+            
+            if(isFollowing) {
+                unfollowUser(current.id, targetId);
+                btn.classList.remove('following');
+                btn.innerHTML = '+';
+            } else {
+                followUser(current.id, targetId);
+                btn.classList.add('following');
+                btn.innerHTML = '✓';
+            }
+            renderFeed();
+            updateTopStats();
+            renderChatList();
+        };
+    });
+    
+    document.querySelectorAll('.chat-small-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            let targetId = btn.dataset.userid;
+            openChatWith(targetId);
+        };
+    });
+    
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.onclick = () => {
+            let postId = btn.dataset.postid;
+            if(toggleLike(postId, current.id)) {
+                renderFeed();
+                updateTopStats();
+            } else {
+                alert('Уже лайкнуто!');
+            }
+        };
+    });
+    
+    document.querySelectorAll('.comment-toggle-btn').forEach(btn => {
+        btn.onclick = () => {
+            let postId = btn.dataset.postid;
+            let div = document.getElementById(`comments-${postId}`);
+            div.style.display = div.style.display === 'none' ? 'block' : 'none';
+        };
+    });
+    
+    document.querySelectorAll('.submit-comment-btn').forEach(btn => {
+        btn.onclick = () => {
+            let postId = btn.dataset.postid;
+            let input = document.querySelector(`.comment-input[data-postid="${postId}"]`);
+            if(input && input.value.trim()) {
+                addComment(postId, current.id, input.value.trim());
+                input.value = '';
+                renderFeed();
+            }
+        };
+    });
+}
+
+function updateTopStats() {
+    let u = getCurrentUser();
+    if(u) {
+        recalcMcoinsForUser(u);
+        document.getElementById('mcoinBalance').innerText = u.mcoins || 0;
+        document.getElementById('followersCount').innerText = u.followers?.length || 0;
+        let total = 0;
+        posts.forEach(p => { if(p.authorId === u.id) total += p.likes?.length || 0; });
+        document.getElementById('totalLikesSum').innerText = total;
+        let badge = getUserBadge(u);
+        document.getElementById('userNickDisplay').innerHTML = `${escapeHtml(u.fullname)} ${badge?.symbol || ''}`;
+    }
+}
+
+function updateOwnProfile() {
+    viewingUserId = null;
+    renderUserProfile();
+}
+
+function switchScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+    document.getElementById(id).classList.add('active-screen');
+    let bottomNav = document.getElementById('bottomNav');
+    if(bottomNav) bottomNav.style.display = (id === 'screenLogin' || id === 'screenRegister') ? 'none' : 'flex';
+    
+    if(id === 'screenMain') { renderFeed(); updateTopStats(); }
+    if(id === 'screenProfile') { 
+        if(viewingUserId === null) updateOwnProfile();
+        else renderUserProfile();
+    }
+    if(id === 'screenChatList') renderChatList();
+}
+
+// ========== ФОТО ==========
+document.getElementById('photoInput')?.addEventListener('change', (e) => {
+    let file = e.target.files[0];
+    if(file) {
+        let reader = new FileReader();
+        reader.onload = (ev) => {
+            currentPhotoData = ev.target.result;
+            document.getElementById('imagePreviewContainer').innerHTML = `
+                <img src="${currentPhotoData}" class="image-preview">
+                <button id="removePhotoBtn" class="remove-image">Удалить</button>
+            `;
+            document.getElementById('removePhotoBtn')?.addEventListener('click', () => {
+                currentPhotoData = null;
+                document.getElementById('imagePreviewContainer').innerHTML = '';
+                document.getElementById('photoInput').value = '';
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// ========== РЕГИСТРАЦИЯ ==========
+document.getElementById('completeRegBtn')?.addEventListener('click', () => {
+    let fn = document.getElementById('regFullname').value.trim();
+    let un = document.getElementById('regUsername').value.trim();
+    let pw = document.getElementById('regPassword').value;
+    if(!fn || !un || !pw) return alert('Заполните все поля');
+    if(getUserByUsername(un)) return alert('Юзернейм занят');
+    users.push({ 
+        id: Date.now().toString(), 
+        fullname: fn, 
+        username: un, 
+        password: pw, 
+        followers: [], 
+        mcoins: 0, 
+        extraMcoins: 0, 
+        subscriptionUntil: null, 
+        neonNameActive: false, 
+        lastSuperlike: 0 
+    });
+    saveAll();
+    alert('Регистрация успешна!');
+    switchScreen('screenLogin');
+});
+
+document.getElementById('doLoginBtn')?.addEventListener('click', () => {
+    let un = document.getElementById('loginUsername').value;
+    let pw = document.getElementById('loginPassword').value;
+    let u = users.find(u => u.username === un && u.password === pw);
+    if(u) { 
+        currentUserId = u.id; 
+        localStorage.setItem('messege_currentUser', currentUserId); 
+        updateAllMcoins(); 
+        switchScreen('screenMain'); 
+    } else alert('Неверно');
+});
+
+document.getElementById('createPostBtn')?.addEventListener('click', () => {
+    let text = document.getElementById('postContent').value;
+    if(!text.trim() && !currentPhotoData) return alert('Напишите текст или добавьте фото');
+    let current = getCurrentUser();
+    if(!current) return;
+    posts.unshift({ 
+        id: Date.now().toString(), 
+        authorId: current.id, 
+        text: text.trim() || "📸", 
+        likes: [], 
+        comments: [], 
+        imageData: currentPhotoData 
+    });
+    saveAll();
+    document.getElementById('postContent').value = '';
+    document.getElementById('imagePreviewContainer').innerHTML = '';
+    document.getElementById('photoInput').value = '';
+    currentPhotoData = null;
+    renderFeed();
+    updateTopStats();
+});
+
+document.getElementById('sendMessageBtn')?.addEventListener('click', () => {
+    let current = getCurrentUser();
+    if(!current || !currentChatPartnerId) return;
+    let input = document.getElementById('chatMessageInput');
+    let text = input.value;
+    if(sendMessage(current.id, currentChatPartnerId, text)) {
+        input.value = '';
+        renderChatMessages(currentChatPartnerId);
+    }
+});
+
+// ========== НАВИГАЦИЯ ==========
+document.getElementById('toRegBtn')?.addEventListener('click', () => switchScreen('screenRegister'));
+document.getElementById('backToLoginBtn')?.addEventListener('click', () => switchScreen('screenLogin'));
+document.getElementById('logoutBtn')?.addEventListener('click', () => { 
+    localStorage.removeItem('messege_currentUser'); 
+    currentUserId = null; 
+    currentChatPartnerId = null;
+    switchScreen('screenLogin'); 
+});
+document.getElementById('backToMainFromProfile')?.addEventListener('click', () => switchScreen('screenMain'));
+document.getElementById('backToMainFromChatList')?.addEventListener('click', () => switchScreen('screenMain'));
+document.getElementById('backToChatList')?.addEventListener('click', () => switchScreen('screenChatList'));
+document.getElementById('backToMainFromShop')?.addEventListener('click', () => switchScreen('screenMain'));
+document.getElementById('backToMainFromSearch')?.addEventListener('click', () => switchScreen('screenMain'));
+
+document.getElementById('navFeed')?.addEventListener('click', () => switchScreen('screenMain'));
+document.getElementById('navChats')?.addEventListener('click', () => switchScreen('screenChatList'));
+document.getElementById('navProfile')?.addEventListener('click', () => { viewingUserId = null; switchScreen('screenProfile'); });
+document.getElementById('navShop')?.addEventListener('click', () => switchScreen('screenShop'));
+document.getElementById('navSearch')?.addEventListener('click', () => switchScreen('screenSearch'));
+
+// ========== МАГАЗИН ==========
+function buySub(days,cost) { 
+    let u=getCurrentUser(); 
+    if(u && u.mcoins>=cost) { 
+        u.mcoins-=cost; 
+        let till=Math.max(u.subscriptionUntil||0,Date.now()); 
+        u.subscriptionUntil=till+days*86400000; 
+        saveAll(); 
+        alert('Подписка активирована!'); 
+        updateTopStats(); 
+    } else alert('Не хватает монет'); 
+}
+document.getElementById('buySubWeek')?.addEventListener('click',()=>buySub(7,100));
+document.getElementById('buySubMonth')?.addEventListener('click',()=>buySub(30,350));
+document.getElementById('buySubHalfYear')?.addEventListener('click',()=>buySub(180,1700));
+document.getElementById('buySubYear')?.addEventListener('click',()=>buySub(365,2200));
+
+document.getElementById('createClanBtn')?.addEventListener('click',()=>{
+    let u=getCurrentUser();
+    if(!u) return;
+    if(u.mcoins>=500 && !clans.find(c=>c.members && c.members.includes(u.id))) {
+        let name=prompt('Название клана');
+        if(name && !clans.find(c=>c.name===name)) { 
+            u.mcoins-=500; 
+            clans.push({ 
+                id:Date.now().toString(), 
+                name:name, 
+                ownerId:u.id, 
+                members:[u.id], 
+                maxSize:30 
+            }); 
+            saveAll(); 
+            alert('Клан создан!'); 
+            updateOwnProfile(); 
+        } else alert('Название занято или отмена');
+    } else alert('Уже в клане или нет 500 монет');
+});
+
+document.getElementById('joinClanBtn')?.addEventListener('click',()=>{
+    let u=getCurrentUser();
+    let clanName=document.getElementById('joinClanName').value;
+    let clan=clans.find(c=>c.name===clanName);
+    if(clan && clan.members && !clan.members.includes(u.id) && clan.members.length<clan.maxSize) { 
+        clan.members.push(u.id); 
+        saveAll(); 
+        alert('Вступили в клан!'); 
+        updateOwnProfile(); 
+    } else alert('Не удалось вступить');
+});
+
+function upgradeClan(cL,nL,cost) { 
+    let u=getCurrentUser(); 
+    let c=clans.find(c=>c.members && c.members.includes(u.id)); 
+    if(c && c.ownerId===u.id && c.maxSize===cL && u.mcoins>=cost) { 
+        c.maxSize=nL; 
+        u.mcoins-=cost; 
+        saveAll(); 
+        alert(`Клан расширен до ${nL} мест!`); 
+    } else alert('Нет прав или монет'); 
+}
+document.getElementById('upgradeClanSlot30')?.addEventListener('click',()=>upgradeClan(30,50,800));
+document.getElementById('upgradeClanSlot50')?.addEventListener('click',()=>upgradeClan(50,75,1200));
+document.getElementById('upgradeClanSlot75')?.addEventListener('click',()=>upgradeClan(75,100,1600));
+
+// ========== ПОИСК ==========
+document.getElementById('searchUserBtn')?.addEventListener('click', () => {
+    let name = document.getElementById('searchUsernameInput').value;
+    let found = users.find(u => u.username === name && u.id !== currentUserId);
+    let div = document.getElementById('searchResult');
+    if(found) {
+        div.innerHTML = `<div class="post-card">
+            <strong>${escapeHtml(found.fullname)}</strong> @${escapeHtml(found.username)}
+            <button id="viewProfileBtn" style="margin-top:10px;">👤 Профиль</button>
+        </div>`;
+        document.getElementById('viewProfileBtn')?.addEventListener('click', () => {
+            viewUserProfile(found.id);
+        });
+    } else div.innerHTML = '<p>Не найден</p>';
+});
+
+// ========== ЗАПУСК ==========
+if(currentUserId && getUserById(currentUserId)) {
+    switchScreen('screenMain');
+} else {
+    switchScreen('screenLogin');
+}
+updateAllMcoins();
+
+window.viewUserProfile = viewUserProfile;
+window.openChatWith = openChatWith;
+window.openModal = openModal;
+window.closeModal = closeModal;
+</script>
+</body>
+</html>
